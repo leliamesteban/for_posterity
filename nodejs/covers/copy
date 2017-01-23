@@ -1,0 +1,6 @@
+#!/bin/bash
+
+mapfile -t all <allimgs
+for i in "${all[@]}";do
+  cp "$i" ./all/
+done

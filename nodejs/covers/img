@@ -1,0 +1,64 @@
+#!/bin/bash
+
+[[ "$1" = "stdout" ]] && exec > $1 || exec > ~/nodejs/images/index.pug
+dir=/home/liam/nodejs/images/all
+
+all=~/nodejs/images/allimgs
+[ -e $all ] || : && find $dir -type f \( -iname \*.jpg -o -iname \*.png \) > $all
+filtered=~/nodejs/images/filtered
+awk -F"/" '{print $7}' $all | uniq > $filtered
+mapfile -t all <$all
+mapfile -t filt <$filtered
+
+  cat <<EOF
+doctype 5
+html(lang="en")
+  head
+    title= 'Index of Music, sorted by Images'
+    meta(name='viewport', content='width=device-width')
+    link('type="text/css" rel="stylesheet" href="style.css"')
+    style.
+      html {
+      background: #f8f8f8;
+      color: #555;
+      font-family: Geneva, Tahoma, Verdana, sans-serif;
+      line-height: 1.4em;
+      }
+      body {
+      margin: 10 auto;
+      max-width: 600px;
+      }
+      h1 {
+      font-weight: 500;
+      line-height: 1.1em;
+      }
+      a {
+      color: #555;
+      text-decoration: none;
+      }
+      img {
+      border: 0;
+      height: 120;
+      width: 120;
+      }
+  body
+    h1 Title
+    |     
+    p
+      | Some text 
+    div.container
+EOF
+
+for i in "${all[@]}";do
+x=`echo $i | awk -F"/" '{print $7}' | uniq`
+echo "      div.image 
+        a(href='$i', alt='$i')
+          img(src='$i')
+$x
+"
+done
+
+for i in "${filt[@]}";do
+echo "        | $i"
+done
+

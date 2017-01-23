@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# check () { }
+# clean up
+bspwm() {
+    sudo apt-get install -y xcb libxcb-util0-dev libxcb-ewmh-dev libxcb-randr0-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-xinerama0-dev libasound2-dev libxcb-xtest0-dev make
+    cd ~/sys/source
+    git clone https://github.com/baskerville/bspwm.git
+    git clone https://github.com/baskerville/sxhkd.git
+    cd bspwm && make && sudo make install
+    cd ../sxhkd && make && sudo make install
+    cd .. && sudo rm -rf bspwm sxhkd
+}
+
+xbmc() {
+    sudo aptitude install xserver-xorg-video-nouveau xserver-xorg-video-vesa nodm xorg-common x11-session-utils xinit alsa nfs-common xbmc xbmc-bin xbmc-common xbmc-data xbmc-eventclients-common xbmc-eventclients-dev xbmc-eventclients-j2me xbmc-eventclients-ps3 xbmc-eventclients-wiiremote xbmc-eventclients-xbmc-send xbmc-skin-confluence xbmc-standalone
+
+}
+
+urserver() {
+    sudo apt-get install -y libx11-6 ; sudo apt-get install -y -f
+    sudo wget http://www.unifiedremote.com/static/builds/server/linux-rpi/420/urserver-3.2.4.420.deb
+    sudo dpkg -i urserver-3.2.4.420.deb
+    wget http://raw.githubusercontent.com/qbwaggle/rpi_scripts/master/urserver/urserver.sh
+    chmod 755 urserver.sh
+    sudo cp urserver.sh /etc/init.d/urserver
+    sudo update-rc.d urserver defaults
+    rm -f urserver*
+    sudo /etc/init.d/urserver start
+}
+
+ffmpeg() {
+    su -c "echo "deb http://oktan.ls.fi.upm.es/deb-multimedia/ stable main" >> /etc/apt/sources.list"
+    #su -c "echo "deb http://www.deb-multimedia.org jessie main non-free stable main" >> /etc/apt/sources.list"
+    sudo apt-get update
+    sudo apt-get install -y deb-multimedia-keyring
+    sudo apt-get update && sudo apt-get dist-upgrade
+    sudo apt-get install -y ffmpeg
+    # or 
+    # wget https://github.com/ccrisan/motioneye/wiki/precompiled/ffmpeg_3.1.1-1_armhf.deb && sudo dpkg -i ffmpeg_3.1.1-1_armhf.deb
+    # http://www.jeffreythompson.org/blog/2014/11/13/installing-ffmpeg-for-raspberry-pi/
+    # http://www.jeffreythompson.org/blog/2014/11/13/installing-ffmpeg-for-raspberry-pi/
+}
+
+youtubedl() {
+    sudo curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
+    sudo chmod a+rx /usr/local/bin/youtube-dl
+}
+
+docker_install() {
+    echo overlay | sudo tee -a /etc/modules
+    # sudo modprobe overlay
+    curl -fsSL -o docker.sh https://get.docker.com/
+    vim docker.sh
+    bash docker.sh
+    sudo systemctl start docker
+    sudo usermod -aG docker liam
+}
+
+
+caketop-theater() {
+wget 'https://raw.githubusercontent.com/XanderStrike/caketop-theater/master/lib/setup.sh'
+chmod +x setup.sh
+bash setup.sh
+rm setup.sh
+}
+
+[ "$1" == "list" ] && grep "^function" $0 || $1

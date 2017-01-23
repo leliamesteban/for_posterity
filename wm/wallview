@@ -1,0 +1,14 @@
+#! /bin/bash
+
+# the -R .01 is redraw for bspwm
+# feh $geom --action1 "echo %n" -R .01 --zoom fill "${pictures[@]}"
+
+geom='-g 800x450+550+293'
+
+feh $geom --action6 "$HOME/bin/chbg %N && echo $i >> ~/Pictures/best" --zoom fill "$pictures"
+
+case $1 in
+    new) pictures=($(find ~/Pictures/*.jpg -mtime -1 -ls | awk '{print $NF}')) ;;
+    here) pictures=($(shuf -e $(pwd)/*.jpg)) ;;
+    *) pictures=($(shuf -e ~/Pictures/*.jpg)) ;;
+esac

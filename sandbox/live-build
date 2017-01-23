@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# sudo apt-get install live-build cdebootstrap
+# https://mohan43u.wordpress.com/2010/11/04/howto-bake-persistent-live-usb-debian-way/
+base=/home/liam/live-build-base
+prepare_base() {
+mkdir $base 
+cd $base
+sudo lb config --architecture amd64 --binary-images usb-hdd \
+    --binary-filesystem fat32 --bootappend-live 'persistent' \
+    --bootstrap cdebootstrap --distribution jessie \
+    --mirror-binary http://ftp.si.debian.org/debian/
+}
+
+config_base() {
+    plist=$base/config/chroot_local-packageslists
+    mkdir -p $plist
+    cp ~/sys/packages/reasonable $plist/packages.list  
+}
+
+build_base() {
+    cd $base && time sudo lb build
+} 
+
+copy_base() {
+    sudo dd if=build.img of=$sd bs=4096
+}
+
+case $1 in
+    '') prepare_base && config_base && build_base ;;
+    *) $1_base ;;
+esac

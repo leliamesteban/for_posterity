@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd ~/scripts/col2html
+bash colors hex 
+#sleep 20s
+cat hex | bash html > file.html
+#firefox.real file.html
+#set resolution, similar to dkeg's inspin/wallview

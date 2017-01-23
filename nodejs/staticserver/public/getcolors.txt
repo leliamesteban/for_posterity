@@ -1,0 +1,13 @@
+convert $1 -colors 16 -depth 8 -format '%c' histogram:info:-
+
+srgb () {
+$commands | awk '{print $NFS}'
+}
+
+hex () {
+$commands | awk '{print $3}'
+}
+
+r,g,b () {
+$commands | awk '{print $2}'
+}

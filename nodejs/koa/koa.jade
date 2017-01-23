@@ -1,0 +1,1156 @@
+doctype html
+html
+  head
+    title Music
+    link(rel='stylesheet', href='style.css')
+    link(rel='stylesheet', href='slate.css')
+    link(rel='stylesheet', href='http://fonts.googleapis.com/css?family=Italiana&subset=latin')
+    meta(name='viewport', content='user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0')
+    //-script.
+      window.analytics=window.analytics||[],window.analytics.methods=["identify","group","track","page","pageview","alias","ready","on","once","off","trackLink","trackForm","trackClick","trackSubmit"],window.analytics.factory=function(t){return function(){var a=Array.prototype.slice.call(arguments);return a.unshift(t),window.analytics.push(a),window.analytics}};for(var i=0;i<window.analytics.methods.length;i++){var key=window.analytics.methods[i];window.analytics[key]=window.analytics.factory(key)}window.analytics.load=function(t){if(!document.getElementById("analytics-js")){var a=document.createElement("script");a.type="text/javascript",a.id="analytics-js",a.async=!0,a.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.io/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(a,n)}},window.analytics.SNIPPET_VERSION="2.0.9",
+      window.analytics.load("9u0xff0b3k");
+      window.analytics.page();
+    //-script(src='stats.js')
+  body
+    section#top
+      #menu
+        a#toggle(href='#')
+          i.icon-menu
+        ul
+          li
+            a(href='#introduction') Artists
+          li
+            a(href='#application') Albums
+          li
+            a(href='#context') Songs
+          li
+            a(href='#request') Playlists
+      #heading
+        #logo Music
+        #tagline Serving Music in 192.168.1.38
+    section
+      .content
+        h1#introduction Ryo Fukui
+        p
+          | Some text about Ryo Fukui, a bio
+        img(src=)
+        video(controls)
+          source(src="/Ryo Fukui.mp4", type="video/mp4")
+          
+    section
+      .content
+        h1#installation Installation
+        p
+          | Koa works out of the box with recent versions of Node. To use Koa with 0.11.x you must use the 
+          code --harmony
+          |  or 
+          code --harmony-generators
+          |  flag.
+        pre.
+          
+        h1#application Application
+        p
+          | A Koa application is an object containing an array of middleware generator functions
+          | which are composed and executed in a stack-like manner upon request. Koa is similar to many
+          | other middleware systems that you may have encountered such as Ruby&apos;s Rack, Connect, and so on -
+          | however a key design decision was made to provide high level &quot;sugar&quot; at the otherwise low-level
+          | middleware layer. This improves interoperability, robustness, and makes writing middleware much
+          | more enjoyable.
+        p
+          | This includes methods for common tasks like content-negotiation, cache freshness, proxy support, and redirection
+          | among others. Despite supplying a reasonably large number of helpful methods Koa maintains a small footprint, as
+          | no middleware are bundled.
+        p   The obligatory hello world application:
+        pre.
+          
+        h2#cascading Cascading
+        p
+          | Koa middleware cascade in a more traditional way as you may be used to with similar tools -
+          | this was previously difficult to make user friendly with node&apos;s use of callbacks.
+          | However with generators we can achieve &quot;true&quot; middleware. Contrasting Connect&apos;s implementation which
+          | simply passes control through series of functions until one returns, Koa yields &quot;downstream&quot;, then
+          | control flows back &quot;upstream&quot;.
+        p
+          | The following example responds with &quot;Hello World&quot;, however first the request flows through
+          | the 
+          code x-response-time
+          |  and 
+          code logging
+          |  middleware to mark when the request started, then continue
+          |   to yield control through the response middleware. When a middleware invokes 
+          code yield next
+          |   the function suspends and passes control to the next middleware defined. After there are no more
+          |   middleware to execute downstream, the stack will unwind and each middleware is resumed to perform
+          |   its upstream behaviour.
+        pre.
+          
+        h2#settings Settings
+        p
+          | Application settings are properties on the 
+          code app
+          |  instance, currently
+          |   the following are supported:
+        ul
+          li
+            code app.name
+            |  optionally give your application a name
+          li
+            code app.env
+            |  defaulting to the 
+            strong NODE_ENV
+            |  or &quot;development&quot;
+          li
+            code app.proxy
+            |  when true proxy header fields will be trusted
+          li
+            code app.subdomainOffset
+            |  offset of 
+            code .subdomains
+            |  to ignore [2]
+        h2#app-listen- app.listen(...)
+        p
+          | A Koa application is not a 1-to-1 representation of a HTTP server.
+          | One or more Koa applications may be mounted together to form larger
+          | applications with a single HTTP server.
+        p
+          | Create and return an HTTP server, passing the given arguments to
+          code Server#listen()
+          | . These arguments are documented on 
+          a(href='http://nodejs.org/api/http.html#http_server_listen_port_hostname_backlog_callback') nodejs.org
+          | . The following is a useless Koa application bound to port 
+          code 3000
+          | :
+        pre.
+          
+        p
+          | The 
+          code app.listen(...)
+          |  method is simply sugar for the following:
+        pre.
+          
+        p
+          | This means you can spin up the same application as both HTTP and HTTPS
+          | or on multiple addresses:
+        pre.
+          
+        h2#app-callback- app.callback()
+        p
+          | Return a callback function suitable for the 
+          code http.createServer()
+          |   method to handle a request.
+          |   You may also use this callback function to mount your koa app in a
+          |   Connect/Express app.
+        h2#app-use-function- app.use(function)
+        p
+          | Add the given middleware function to this application. See 
+          a(href='https://github.com/koajs/koa/wiki#middleware') Middleware
+          |  for
+          |   more information.
+        h2#app-keys- app.keys=
+        p  Set signed cookie keys.
+        p
+          | These are passed to 
+          a(href='https://github.com/jed/keygrip') KeyGrip
+          | ,
+          |  however you may also pass your own 
+          code KeyGrip
+          |  instance. For
+          |  example the following are acceptable:
+        pre.
+          
+        p
+          | These keys may be rotated and are used when signing cookies
+          | with the 
+          code { signed: true }
+          |  option:
+        pre.
+          
+        h2#app-context app.context
+        p
+          | The recommended namespace to extend with information that&apos;s useful
+          | throughout the lifetime of your application, as opposed to a per request basis.
+        pre.
+          
+        h2#error-handling Error Handling
+        p
+          | By default outputs all errors to stderr unless 
+          strong NODE_ENV
+          |  is &quot;test&quot;. To perform custom error-handling logic such as centralized logging you
+          |   can add an &quot;error&quot; event listener:
+        pre.
+          
+        p
+          | If an error in the req/res cycle and it is 
+          em not
+          |  possible to respond to the client, the 
+          code Context
+          |  instance is also passed:
+        pre.
+          
+        p
+          | When an error occurs 
+          em and
+          |  it is still possible to respond to the client, aka no data has been written to the socket, Koa will respond
+          |   appropriately with a 500 &quot;Internal Server Error&quot;. In either case
+          |   an app-level &quot;error&quot; is emitted for logging purposes.
+    section
+      .content
+        h1#context Context
+        p
+          | A Koa Context encapsulates node&apos;s 
+          code request
+          |  and 
+          code response
+          |  objects
+          |   into a single object which provides many helpful methods for writing
+          |   web applications and APIs.
+          |   These operations are used so frequently in HTTP server development
+          |   that they are added at this level instead of a higher level framework,
+          |   which would force middleware to re-implement this common functionality.
+        p
+          | A 
+          code Context
+          |  is created 
+          em per
+          |  request, and is referenced in middleware
+          |   as the receiver, or the 
+          code this
+          |  identifier, as shown in the following
+          |   snippet:
+        pre.
+          
+        p
+          | Many of the context&apos;s accessors and methods simply delegate to their 
+          code ctx.request
+          |  or 
+          code ctx.response
+          |   equivalents for convenience, and are otherwise identical. For example 
+          code ctx.type
+          |  and 
+          code ctx.length
+          |   delegate to the 
+          code response
+          |  object, and 
+          code ctx.path
+          |  and 
+          code ctx.method
+          |  delegate to the 
+          code request
+          | .
+        h2#api API
+        p
+          code Context
+          |  specific methods and accessors.
+        h3#ctx-req ctx.req
+        p
+          | Node&apos;s 
+          code request
+          |  object.
+        h3#ctx-res ctx.res
+        p
+          | Node&apos;s 
+          code response
+          |  object.
+        p
+          | Bypassing Koa&apos;s response handling is 
+          strong not supported
+          | . Avoid using the following node properties:
+        ul
+          li
+            code res.statusCode
+          li
+            code res.writeHead()
+          li
+            code res.write()
+          li
+            code res.end()
+        h3#ctx-request ctx.request
+        p
+          | A koa 
+          code Request
+          |  object.
+        h3#ctx-response ctx.response
+        p
+          | A koa 
+          code Response
+          |  object.
+        h3#ctx-state ctx.state
+        p
+          | The recommended namespace for passing information through middleware and to your frontend views.
+        pre.
+          
+        h3#ctx-app ctx.app
+        p   Application instance reference.
+        h3#ctx-cookies-get-name-options- ctx.cookies.get(name, [options])
+        p
+          | Get cookie 
+          code name
+          |  with 
+          code options
+          | :
+        ul
+          li
+            code signed
+            |  the cookie requested should be signed
+        p
+          | koa uses the 
+          a(href='https://github.com/jed/cookies') cookies
+          |  module where options are simply passed.
+        h3#ctx-cookies-set-name-value-options- ctx.cookies.set(name, value, [options])
+        p
+          | Set cookie 
+          code name
+          |  to 
+          code value
+          |  with 
+          code options
+          | :
+        ul
+          li
+            code signed
+            |  sign the cookie value
+          li
+            code expires
+            |  a 
+            code Date
+            |  for cookie expiration
+          li
+            code path
+            |  cookie path, 
+            code /&apos;
+            |  by default
+          li
+            code domain
+            |  cookie domain
+          li
+            code secure
+            |  secure cookie
+          li
+            code httpOnly
+            |  server-accessible cookie, 
+            strong true
+            |  by default
+        p
+          | koa uses the 
+          a(href='https://github.com/jed/cookies') cookies
+          |  module where options are simply passed.
+        h3#ctx-throw-msg-status-properties- ctx.throw([msg], [status], [properties])
+        p
+          | Helper method to throw an error with a 
+          code .status
+          |  property
+          |   defaulting to 
+          code 500
+          |  that will allow Koa to respond appropriately.
+          |   The following combinations are allowed:
+        pre.
+          
+        p
+          | For example 
+          code this.throw(&apos;name required&apos;, 400)
+          |  is equivalent to:
+        pre.
+          
+        p
+          | Note that these are user-level errors and are flagged with
+          code err.expose
+          |  meaning the messages are appropriate for
+          |   client responses, which is typically not the case for
+          |   error messages since you do not want to leak failure
+          |   details.
+        p
+          | You may optionally pass a 
+          code properties
+          |  object which is merged into the error as-is, useful for decorating machine-friendly errors which are reported to the requester upstream.
+        pre.
+          
+        p
+          | koa uses 
+          a(href='https://github.com/jshttp/http-errors') http-errors
+          |  to create errors.
+        h3#ctx-assert-value-msg-status-properties- ctx.assert(value, [msg], [status], [properties])
+        p
+          | Helper method to throw an error similar to 
+          code .throw()
+          |   when 
+          code !value
+          | . Similar to node&apos;s 
+          a(href='http://nodejs.org/api/assert.html') assert()
+          |   method.
+        pre.
+          
+        p
+          | koa uses 
+          a(href='https://github.com/jshttp/http-assert') http-assert
+          |  for assertions.
+        h3#ctx-respond ctx.respond
+        p
+          | To bypass Koa&apos;s built-in response handling, you may explicitly set 
+          code this.respond = false;
+          | . Use this if you want to write to the raw 
+          code res
+          |  object instead of letting Koa handle the response for you.
+        p
+          | Note that using this is 
+          strong not
+          |  supported by Koa. This may break intended functionality of Koa middleware and Koa itself. Using this property is considered a hack and is only a convenience to those wishing to use traditional 
+          code fn(req, res)
+          |  functions and middleware within Koa.
+        h2#request-aliases Request aliases
+        p
+          | The following accessors and alias 
+          a(href='#request') Request
+          |  equivalents:
+        ul
+          li
+            code ctx.header
+          li
+            code ctx.headers
+          li
+            code ctx.method
+          li
+            code ctx.method=
+          li
+            code ctx.url
+          li
+            code ctx.url=
+          li
+            code ctx.originalUrl
+          li
+            code ctx.origin
+          li
+            code ctx.href
+          li
+            code ctx.path
+          li
+            code ctx.path=
+          li
+            code ctx.query
+          li
+            code ctx.query=
+          li
+            code ctx.querystring
+          li
+            code ctx.querystring=
+          li
+            code ctx.host
+          li
+            code ctx.hostname
+          li
+            code ctx.fresh
+          li
+            code ctx.stale
+          li
+            code ctx.socket
+          li
+            code ctx.protocol
+          li
+            code ctx.secure
+          li
+            code ctx.ip
+          li
+            code ctx.ips
+          li
+            code ctx.subdomains
+          li
+            code ctx.is()
+          li
+            code ctx.accepts()
+          li
+            code ctx.acceptsEncodings()
+          li
+            code ctx.acceptsCharsets()
+          li
+            code ctx.acceptsLanguages()
+          li
+            code ctx.get()
+        h2#response-aliases Response aliases
+        p
+          | The following accessors and alias 
+          a(href='#response') Response
+          |  equivalents:
+        ul
+          li
+            code ctx.body
+          li
+            code ctx.body=
+          li
+            code ctx.status
+          li
+            code ctx.status=
+          li
+            code ctx.message
+          li
+            code ctx.message=
+          li
+            code ctx.length=
+          li
+            code ctx.length
+          li
+            code ctx.type=
+          li
+            code ctx.type
+          li
+            code ctx.headerSent
+          li
+            code ctx.redirect()
+          li
+            code ctx.attachment()
+          li
+            code ctx.set()
+          li
+            code ctx.append()
+          li
+            code ctx.remove()
+          li
+            code ctx.lastModified=
+          li
+            code ctx.etag=
+    section
+      .content
+        h1#request Request
+        p
+          | A Koa 
+          code Request
+          |  object is an abstraction on top of node&apos;s vanilla request object,
+          |   providing additional functionality that is useful for every day HTTP server
+          |   development.
+        h2#api API
+        h3#request-header request.header
+        p  Request header object.
+        h3#request-headers request.headers
+        p
+          | Request header object. Alias as 
+          code request.header
+          | .
+        h3#request-method request.method
+        p   Request method.
+        h3#request-method- request.method=
+        p
+          | Set request method, useful for implementing middleware
+          | such as 
+          code methodOverride()
+          | .
+        h3#request-length request.length
+        p
+          | Return request Content-Length as a number when present, or 
+          code undefined
+          | .
+        h3#request-url request.url
+        p   Get request URL.
+        h3#request-url- request.url=
+        p   Set request URL, useful for url rewrites.
+        h3#request-originalurl request.originalUrl
+        p   Get request original URL.
+        h3#request-origin request.origin
+        p
+          | Get origin of URL, include 
+          code protocol
+          |  and 
+          code host
+          | .
+        pre.
+          
+        h3#request-href request.href
+        p
+          | Get full request URL, include 
+          code protocol
+          | , 
+          code host
+          |  and 
+          code url
+          | .
+        pre.
+          
+        h3#request-path request.path
+        p   Get request pathname.
+        h3#request-path- request.path=
+        p   Set request pathname and retain query-string when present.
+        h3#request-querystring request.querystring
+        p
+          | Get raw query string void of 
+          code ?
+          | .
+        h3#request-querystring- request.querystring=
+        p   Set raw query string.
+        h3#request-search request.search
+        p
+          | Get raw query string with the 
+          code ?
+          | .
+        h3#request-search- request.search=
+        p   Set raw query string.
+        h3#request-host request.host
+        p
+          | Get host (hostname:port) when present. Supports 
+          code X-Forwarded-Host
+          |   when 
+          code app.proxy
+          |  is 
+          strong true
+          | , otherwise 
+          code Host
+          |  is used.
+        h3#request-hostname request.hostname
+        p
+          | Get hostname when present. Supports 
+          code X-Forwarded-Host
+          |   when 
+          code app.proxy
+          |  is 
+          strong true
+          | , otherwise 
+          code Host
+          |  is used.
+        h3#request-type request.type
+        p
+          | Get request 
+          code Content-Type
+          |  void of parameters such as &quot;charset&quot;.
+        pre.
+          
+        h3#request-charset request.charset
+        p
+          | Get request charset when present, or 
+          code undefined
+          | :
+        pre.
+          
+        h3#request-query request.query
+        p
+          | Get parsed query-string, returning an empty object when no
+          | query-string is present. Note that this getter does 
+          em not
+          |   support nested parsing.
+        p   For example &quot;color=blue&amp;size=small&quot;:
+        pre.
+          
+        h3#request-query- request.query=
+        p
+          | Set query-string to the given object. Note that this
+          | setter does 
+          em not
+          |  support nested objects.
+        pre.
+          
+        h3#request-fresh request.fresh
+        p
+          | Check if a request cache is &quot;fresh&quot;, aka the contents have not changed. This
+          | method is for cache negotiation between 
+          code If-None-Match
+          |  / 
+          code ETag
+          | , and 
+          code If-Modified-Since
+          |  and 
+          code Last-Modified
+          | . It should be referenced after setting one or more of these response headers.
+        pre.
+          
+        h3#request-stale request.stale
+        p
+          | Inverse of 
+          code request.fresh
+          | .
+        h3#request-protocol request.protocol
+        p
+          | Return request protocol, &quot;https&quot; or &quot;http&quot;. Supports 
+          code X-Forwarded-Proto
+          |   when 
+          code app.proxy
+          |  is 
+          strong true
+          | .
+        h3#request-secure request.secure
+        p
+          | Shorthand for 
+          code this.protocol == &quot;https&quot;
+          |  to check if a request was
+          |   issued via TLS.
+        h3#request-ip request.ip
+        p
+          | Request remote address. Supports 
+          code X-Forwarded-For
+          |  when 
+          code app.proxy
+          |   is 
+          strong true
+          | .
+        h3#request-ips request.ips
+        p
+          | When 
+          code X-Forwarded-For
+          |  is present and 
+          code app.proxy
+          |  is enabled an array
+          |   of these ips is returned, ordered from upstream -&gt; downstream. When disabled
+          |   an empty array is returned.
+        h3#request-subdomains request.subdomains
+        p   Return subdomains as an array.
+        p
+          | Subdomains are the dot-separated parts of the host before the main domain of
+          | the app. By default, the domain of the app is assumed to be the last two
+          | parts of the host. This can be changed by setting 
+          code app.subdomainOffset
+          | .
+        p
+          | For example, if the domain is &quot;tobi.ferrets.example.com&quot;:
+          | If 
+          code app.subdomainOffset
+          |  is not set, this.subdomains is 
+          code [&quot;ferrets&quot;, &quot;tobi&quot;]
+          | .
+          |   If 
+          code app.subdomainOffset
+          |  is 3, this.subdomains is 
+          code [&quot;tobi&quot;]
+          | .
+        h3#request-is-types- request.is(types...)
+        p
+          | Check if the incoming request contains the &quot;Content-Type&quot;
+          | header field, and it contains any of the give mime 
+          code type
+          | s.
+          |   If there is no request body, 
+          code undefined
+          |  is returned.
+          |   If there is no content type, or the match fails 
+          code false
+          |  is returned.
+          |   Otherwise, it returns the matching content-type.
+        pre.
+          
+        p
+          | For example if you want to ensure that
+          | only images are sent to a given route:
+        pre.
+          
+        h3#content-negotiation Content Negotiation
+        p
+          | Koa&apos;s 
+          code request
+          |  object includes helpful content negotiation utilities powered by 
+          a(href='http://github.com/expressjs/accepts') accepts
+          |  and 
+          a(href='https://github.com/federomero/negotiator') negotiator
+          | . These utilities are:
+        ul
+          li
+            code request.accepts(types)
+          li
+            code request.acceptsEncodings(types)
+          li
+            code request.acceptsCharsets(charsets)
+          li
+            code request.acceptsLanguages(langs)
+        p
+          | If no types are supplied, 
+          strong all
+          |  acceptable types are returned.
+        p
+          | If multiple types are supplied, the best match will be returned. If no matches are found, a 
+          code false
+          |  is returned, and you should send a 
+          code 406 &quot;Not Acceptable&quot;
+          |  response to the client.
+        p
+          | In the case of missing accept headers where any type is acceptable, the first type will be returned. Thus, the order of types you supply is important.
+        h3#request-accepts-types- request.accepts(types)
+        p
+          | Check if the given 
+          code type(s)
+          |  is acceptable, returning the best match when true, otherwise 
+          code false
+          | . The 
+          code type
+          |  value may be one or more mime type string
+          |   such as &quot;application/json&quot;, the extension name
+          |   such as &quot;json&quot;, or an array 
+          code [&quot;json&quot;, &quot;html&quot;, &quot;text/plain&quot;]
+          | .
+        pre.
+          
+        p
+          | You may call 
+          code this.accepts()
+          |  as many times as you like,
+          |   or use a switch:
+        pre.
+          
+        h3#request-acceptsencodings-encodings- request.acceptsEncodings(encodings)
+        p
+          | Check if 
+          code encodings
+          |  are acceptable, returning the best match when true, otherwise 
+          code false
+          | . Note that you should include 
+          code identity
+          |  as one of the encodings!
+        pre.
+          
+        p
+          | When no arguments are given all accepted encodings
+          | are returned as an array:
+        pre.
+          
+        p
+          | Note that the 
+          code identity
+          |  encoding (which means no encoding) could be unacceptable if the client explicitly sends 
+          code identity;q=0
+          | . Although this is an edge case, you should still handle the case where this method returns 
+          code false
+          | .
+        h3#request-acceptscharsets-charsets- request.acceptsCharsets(charsets)
+        p
+          | Check if 
+          code charsets
+          |  are acceptable, returning
+          |   the best match when true, otherwise 
+          code false
+          | .
+        pre.
+          
+        p
+          | When no arguments are given all accepted charsets
+          | are returned as an array:
+        pre.
+          
+        h3#request-acceptslanguages-langs- request.acceptsLanguages(langs)
+        p
+          | Check if 
+          code langs
+          |  are acceptable, returning
+          |   the best match when true, otherwise 
+          code false
+          | .
+        pre.
+          
+        p
+          | When no arguments are given all accepted languages
+          | are returned as an array:
+        pre.
+          
+        h3#request-idempotent request.idempotent
+        p   Check if the request is idempotent.
+        h3#request-socket request.socket
+        p   Return the request socket.
+        h3#request-get-field- request.get(field)
+        p   Return request header.
+    section
+      .content
+        h1#response Response
+        p
+          | A Koa 
+          code Response
+          |  object is an abstraction on top of node&apos;s vanilla response object,
+          |   providing additional functionality that is useful for every day HTTP server
+          |   development.
+        h2#api API
+        h3#response-header response.header
+        p   Response header object.
+        h3#response-headers response.headers
+        p
+          | Response header object. Alias as 
+          code response.header
+          | .
+        h3#response-socket response.socket
+        p   Request socket.
+        h3#response-status response.status
+        p
+          | Get response status. By default, 
+          code response.status
+          |  is not set unlike node&apos;s 
+          code res.statusCode
+          |  which defaults to 
+          code 200
+          | .
+        h3#response-status- response.status=
+        p   Set response status via numeric code:
+        ul
+          li 100 &quot;continue&quot;
+          li 101 &quot;switching protocols&quot;
+          li 102 &quot;processing&quot;
+          li 200 &quot;ok&quot;
+          li 201 &quot;created&quot;
+          li 202 &quot;accepted&quot;
+          li 203 &quot;non-authoritative information&quot;
+          li 204 &quot;no content&quot;
+          li 205 &quot;reset content&quot;
+          li 206 &quot;partial content&quot;
+          li 207 &quot;multi-status&quot;
+          li 300 &quot;multiple choices&quot;
+          li 301 &quot;moved permanently&quot;
+          li 302 &quot;moved temporarily&quot;
+          li 303 &quot;see other&quot;
+          li 304 &quot;not modified&quot;
+          li 305 &quot;use proxy&quot;
+          li 307 &quot;temporary redirect&quot;
+          li 400 &quot;bad request&quot;
+          li 401 &quot;unauthorized&quot;
+          li 402 &quot;payment required&quot;
+          li 403 &quot;forbidden&quot;
+          li 404 &quot;not found&quot;
+          li 405 &quot;method not allowed&quot;
+          li 406 &quot;not acceptable&quot;
+          li 407 &quot;proxy authentication required&quot;
+          li 408 &quot;request time-out&quot;
+          li 409 &quot;conflict&quot;
+          li 410 &quot;gone&quot;
+          li 411 &quot;length required&quot;
+          li 412 &quot;precondition failed&quot;
+          li 413 &quot;request entity too large&quot;
+          li 414 &quot;request-uri too large&quot;
+          li 415 &quot;unsupported media type&quot;
+          li 416 &quot;requested range not satisfiable&quot;
+          li 417 &quot;expectation failed&quot;
+          li 418 &quot;i&apos;m a teapot&quot;
+          li 422 &quot;unprocessable entity&quot;
+          li 423 &quot;locked&quot;
+          li 424 &quot;failed dependency&quot;
+          li 425 &quot;unordered collection&quot;
+          li 426 &quot;upgrade required&quot;
+          li 428 &quot;precondition required&quot;
+          li 429 &quot;too many requests&quot;
+          li 431 &quot;request header fields too large&quot;
+          li 500 &quot;internal server error&quot;
+          li 501 &quot;not implemented&quot;
+          li 502 &quot;bad gateway&quot;
+          li 503 &quot;service unavailable&quot;
+          li 504 &quot;gateway time-out&quot;
+          li 505 &quot;http version not supported&quot;
+          li 506 &quot;variant also negotiates&quot;
+          li 507 &quot;insufficient storage&quot;
+          li 509 &quot;bandwidth limit exceeded&quot;
+          li 510 &quot;not extended&quot;
+          li 511 &quot;network authentication required&quot;
+        p
+          strong NOTE
+          | : don&apos;t worry too much about memorizing these strings,
+          | if you have a typo an error will be thrown, displaying this list
+          | so you can make a correction.
+        h3#response-message response.message
+        p
+          | Get response status message. By default, 
+          code response.message
+          |  is
+          |   associated with 
+          code response.status
+          | .
+        h3#response-message- response.message=
+        p   Set response status message to the given value.
+        h3#response-length- response.length=
+        p   Set response Content-Length to the given value.
+        h3#response-length response.length
+        p
+          | Return response Content-Length as a number when present, or deduce
+          | from 
+          code this.body
+          |  when possible, or 
+          code undefined
+          | .
+        h3#response-body response.body
+        p   Get response body.
+        h3#response-body- response.body=
+        p   Set response body to one of the following:
+        ul
+          li
+            code string
+            |  written
+          li
+            code Buffer
+            |  written
+          li
+            code Stream
+            |  piped
+          li
+            code Object
+            |  json-stringified
+          li
+            code null
+            |  no content response
+        p
+          | If 
+          code response.status
+          |  has not been set, Koa will automatically set the status to 
+          code 200
+          |  or 
+          code 204
+          | .
+        h4#string String
+        p
+          | The Content-Type is defaulted to text/html or text/plain, both with
+          | a default charset of utf-8. The Content-Length field is also set.
+        h4#buffer Buffer
+        p
+          | The Content-Type is defaulted to application/octet-stream, and Content-Length
+          | is also set.
+        h4#stream Stream
+        p   The Content-Type is defaulted to application/octet-stream.
+        h4#object Object
+        p   The Content-Type is defaulted to application/json.
+        h3#response-get-field- response.get(field)
+        p
+          | Get a response header field value with case-insensitive 
+          code field
+          | .
+        pre.
+          
+        h3#response-set-field-value- response.set(field, value)
+        p
+          | Set response header 
+          code field
+          |  to 
+          code value
+          | :
+        pre.
+          
+        h3#response-append-field-value- response.append(field, value)
+        p
+          | Append additional header 
+          code field
+          |  with value 
+          code val
+          | .
+        pre.
+          
+        h3#response-set-fields- response.set(fields)
+        p
+          | Set several response header 
+          code fields
+          |  with an object:
+        pre.
+          
+        h3#response-remove-field- response.remove(field)
+        p
+          | Remove header 
+          code field
+          | .
+        h3#response-type response.type
+        p
+          | Get response 
+          code Content-Type
+          |  void of parameters such as &quot;charset&quot;.
+        pre.
+          
+        h3#response-type- response.type=
+        p
+          | Set response 
+          code Content-Type
+          |  via mime string or file extension.
+        pre.
+          
+        p
+          | Note: when appropriate a 
+          code charset
+          |  is selected for you, for
+          |   example 
+          code response.type = &apos;html&apos;
+          |  will default to &quot;utf-8&quot;, however
+          |   when explicitly defined in full as 
+          code response.type = &apos;text/html&apos;
+          |   no charset is assigned.
+        h3#response-is-types- response.is(types...)
+        p
+          | Very similar to 
+          code this.request.is()
+          | .
+          |   Check whether the response type is one of the supplied types.
+          |   This is particularly useful for creating middleware that
+          |   manipulate responses.
+        p
+          | For example, this is a middleware that minifies
+          | all HTML responses except for streams.
+        pre.
+          
+        h3#response-redirect-url-alt- response.redirect(url, [alt])
+        p
+          | Perform a [302] redirect to 
+          code url
+          | .
+        p
+          | The string &quot;back&quot; is special-cased
+          | to provide Referrer support, when Referrer
+          | is not present 
+          code alt
+          |  or &quot;/&quot; is used.
+        pre.
+          
+        p
+          | To alter the default status of 
+          code 302
+          | , simply assign the status
+          |   before or after this call. To alter the body, assign it after this call:
+        pre.
+          
+        h3#response-attachment-filename- response.attachment([filename])
+        p
+          | Set 
+          code Content-Disposition
+          |  to &quot;attachment&quot; to signal the client
+          |   to prompt for download. Optionally specify the 
+          code filename
+          |  of the
+          |   download.
+        h3#response-headersent response.headerSent
+        p
+          | Check if a response header has already been sent. Useful for seeing
+          | if the client may be notified on error.
+        h3#response-lastmodified response.lastModified
+        p
+          | Return the 
+          code Last-Modified
+          |  header as a 
+          code Date
+          | , if it exists.
+        h3#response-lastmodified- response.lastModified=
+        p
+          | Set the 
+          code Last-Modified
+          |  header as an appropriate UTC string.
+          |   You can either set it as a 
+          code Date
+          |  or date string.
+        pre.
+          
+        h3#response-etag- response.etag=
+        p
+          | Set the ETag of a response including the wrapped 
+          code &quot;
+          | s.
+          |   Note that there is no corresponding 
+          code response.etag
+          |  getter.
+        pre.
+          
+        h3#response-vary-field- response.vary(field)
+        p
+          | Vary on 
+          code field
+          | .
+    section
+      .content
+        h1#links Links
+        p
+          | Community links to discover third-party middleware for Koa, full runnable examples,
+          | thorough guides and more! If you have questions join us in IRC!
+        ul
+          li
+            a(href='https://github.com/koajs/koa') GitHub repository
+          li
+            a(href='https://github.com/koajs/examples') Examples
+          li
+            a(href='https://github.com/koajs/koa/wiki') Middleware
+          li
+            a(href='https://github.com/koajs/koa/wiki') Wiki
+          li
+            a(href='https://plus.google.com/communities/101845768320796750641') G+ Community
+          li
+            a(href='https://groups.google.com/forum/#!forum/koajs') Mailing list
+          li
+            a(href='https://github.com/koajs/koa/blob/master/docs/guide.md') Guide
+          li
+            a(href='https://github.com/koajs/koa/blob/master/docs/faq.md') FAQ
+          li
+            strong #koajs
+            |  on freenode

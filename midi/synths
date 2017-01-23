@@ -1,0 +1,4 @@
+espeakup # Connector between speakup kernel modules and espeak 
+horgand # JACK capable organ softsynth 
+phasex # Phase Harmonic Advanced Synthesis EXperiment 
+qsynth # fluidsynth MIDI sound synthesiser front#end

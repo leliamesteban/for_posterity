@@ -1,0 +1,248 @@
+#!/bin/bash
+
+live_build_example() {
+    packages=(live-build)
+    sudo apt-get install "${packages[@]}"
+    lb config -b hdd --linux-packages linux-image-4.0-custom -m http://http.debian.net/debian
+    echo task-kde-desktop >> config/package-lists/my.list.chroot 
+    sudo lb build
+}
+
+box() {
+    echo "Bootstrap first, too involved, use vagrant or something like that"
+    sleep 2s
+    img=$HOME/sys/virt/qemu/debian/x86_64/qemu/debian/disk.qcow2 
+    qemu-img create -f qcow2 $img 15G
+    sudo modprobe nbd max_part=16
+    qemu-nbd -c /dev/nbd0 $img
+    sfdisk /dev/nbd0 -D -uM << EOF
+    ,512,82
+    ;
+EOF
+    sudo mkfs.ext3 /dev/nbd0p2
+    sudo mkdir /mnt/bootstrap
+    sudo mount /dev/nbd0p2 /mnt/bootstrap
+    debootstrap --include=less,locales-all,vim,sudo,openssh-server stable /mnt  http://ftp.us.debian.org/debian
+    # http://diogogomes.com/2012/07/13/debootstrap-kvm-image/
+    # http://www.olafdietsche.de/2016/03/24/debootstrap-bootable-image
+
+}
+
+other() {
+    echo "lvm 
+    https://debian-administration.org/article/577/How_To_Migrate_to_a_full_encrypted_LVM_system"
+    echo https://wiki.debian.org/Multistrap
+    echo simple chroot
+    echo https://gist.github.com/mikkeloscar/a85b08881c437795c1b9
+}
+
+lxc() {
+    # http://fabiorehm.com/blog/2013/07/18/crafting-your-own-vagrant-lxc-base-box/
+    # http://sylvain.fankhauser.name/setting-up-lxc-containers-in-30-minutes-debian-wheezy.html
+    SUITE=jessie
+    RELEASE=$SUITE
+    sudo lxc-create -n ${RELEASE}-base -t debian
+    rootfs="/var/lib/lxc/${RELEASE}-base/rootfs"
+
+    # This fixes some networking issues
+    # See https://github.com/fgrehm/vagrant-lxc/issues/91 for more info
+    sudo sed -i -e "s/\(127.0.0.1\s\+localhost\)/\1\n127.0.1.1\t${RELEASE}-base\n/g" ${rootfs}/etc/hosts
+
+    # This ensures that `/tmp` does not get cleared on halt
+    # See https://github.com/fgrehm/vagrant-lxc/issues/68 for more info
+    sudo chroot $rootfs /usr/sbin/update-rc.d -f checkroot-bootclean.sh remove
+    sudo chroot $rootfs /usr/sbin/update-rc.d -f mountall-bootclean.sh remove
+    sudo chroot $rootfs /usr/sbin/update-rc.d -f mountnfs-bootclean.sh remove
+    ROOTFS=/var/lib/lxc/${RELEASE}-base/rootfs
+    sudo chroot ${ROOTFS} useradd --create-home -s /bin/bash vagrant
+    echo -n 'vagrant:vagrant' | sudo chroot ${ROOTFS} chpasswd
+    sudo chroot ${ROOTFS} apt-get install sudo -y --force-yes
+    sudo chroot ${ROOTFS} adduser vagrant sudo
+    # Configure SSH access
+    sudo mkdir -p ${ROOTFS}/home/vagrant/.ssh
+    sudo wget https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub -O ${ROOTFS}/home/vagrant/.ssh/authorized_keys
+    sudo chroot ${ROOTFS} chown -R vagrant:vagrant /home/vagrant/.ssh
+
+    # Enable passwordless sudo for users under the "sudo" group
+    sudo cp ${ROOTFS}/etc/sudoers{,.orig}
+    sudo sed -i -e \
+        's/%sudo\s\+ALL=(ALL\(:ALL\)\?)\s\+ALL/%sudo ALL=NOPASSWD:ALL/g' \
+        ${ROOTFS}/etc/sudoers
+    sudo lxc-start -n ${RELEASE}-base
+    # inside the container
+    # sudo apt-get install -y --force-yes ca-certificates
+    # sudo apt-get update
+    # PACKAGES=(vim curl wget manpages bash-completion)
+    # sudo apt-get install ${PACKAGES[*]} -y --force-yes
+
+    # Set up a working dir
+    mkdir -p /tmp/vagrant-lxc-${RELEASE}
+
+    # Compress container's rootfs
+    cd /var/lib/lxc/${RELEASE}-base
+    sudo tar --numeric-owner -czf /tmp/vagrant-lxc-${RELEASE}/rootfs.tar.gz ./rootfs/*
+
+    # Prepare package contents
+    cd /tmp/vagrant-lxc-${RELEASE}
+    sudo chown $USER:`id -gn` rootfs.tar.gz
+    wget https://raw.github.com/fgrehm/vagrant-lxc/master/boxes/common/lxc-template
+    wget https://raw.github.com/fgrehm/vagrant-lxc/master/boxes/common/lxc.conf
+    wget https://raw.github.com/fgrehm/vagrant-lxc/master/boxes/common/metadata.json
+    chmod +x lxc-template
+
+    # Vagrant box!
+    tar -czf vagrant-lxc-${RELEASE}.box ./*
+    mkdir -p /tmp/test-import && cd /tmp/test-import
+    vagrant init my-box /tmp/vagrant-lxc-${RELEASE}/vagrant-lxc-${RELEASE}.box
+    vagrant up --provider=lxc
+
+}
+
+migrate() {
+
+    echo http://moozing.wordpress.com/2015/06/24/converting-a-physical-machine-to-a-virtual-machine/
+    echo http://manuel.kiessling.net/2013/03/19/converting-a-running-physical-machine-to-a-kvm-virtual-machine/
+    echo http://www.savelono.com/linux/how-to-migrate-a-qemu-kvm-image-to-a-physical-machinepc.html
+    echo https://wiki.archlinux.org/index.php/Moving_an_existing_install_into_%28or_out_of%29_a_virtual_machine
+    echo http://people.linaro.org/~riku.voipio/debian-images/#/27
+    echo http://moozing.wordpress.com/2015/06/24/converting-a-physical-machine-to-a-virtual-machine/
+    echo http://manuel.kiessling.net/2013/03/19/converting-a-running-physical-machine-to-a-kvm-virtual-machine/
+    echo http://www.savelono.com/linux/how-to-migrate-a-qemu-kvm-image-to-a-physical-machinepc.html
+    echo https://wiki.archlinux.org/index.php/Moving_an_existing_install_into_%28or_out_of%29_a_virtual_machine
+
+}
+
+bootstrap() {
+    #   "See ~/bin/new_install"
+    packages=(cdebootstrap)
+    # Usually around 6 minutes
+    [ -z $1 ] && ( echo stable or sid? ; exit )
+    [ -z $2 ] && chroot_dir=$HOME/sys/chroot/$1 || chroot_dir=$HOME/sys/chroot/$2
+    if [ ! -d $chroot_dir ];then
+        mkdir -p $chroot_dir
+        sudo cdebootstrap $1 $chroot_dir http://httpredir.debian.org/debian/
+        echo "proc $chroot_dir/proc proc defaults 0 0" | sudo tee -a $chroot_dir/etc/fstab
+        sudo mount proc $chroot_dir/proc -t proc
+        echo "sysfs $chroot_dir/sys sysfs defaults 0 0" | sudo tee -a $chroot_dir/etc/fstab
+        sudo mount sysfs $chroot_dir/sys -t sysfs
+        cp /etc/hosts $chroot_dir/etc/hosts
+        cp /proc/mounts $chroot_dir/etc/mtab
+    fi
+    sudo chroot $chroot_dir
+    # graphic (http://www.binarytides.com/setup-chroot-ubuntu-debootstrap/)
+}
+
+vz() {
+    #   sudo aptitude install bootstrap-vz
+    #   git clone https://github.com/andsens/bootstrap-vz/
+    cd ~/sys/source/bootstrap-vz
+    cat << EOF > config.yml
+    provider:
+    name: sandbox
+    bootstrapper:
+    workspace: /target
+    image:
+    description: Debian {system.release} {system.architecture}
+    system:
+    release: jessie
+    architecture: amd64
+    bootloader: grub
+    charmap: UTF-8
+    locale: en_US
+    timezone: UTC
+    volume:
+    backing: raw
+    partitions:
+    type: msdos
+    root:
+    filesystem: ext4
+    size: 10GiB
+    packages:
+    mirror: http://gce_debian_mirror.storage.googleapis.com/
+    components:
+    - main
+    - contrib
+    - non-free
+    plugins:
+    google_cloud_sdk: {}
+    ntp:
+    servers:
+    - metadata.google.internal
+EOF
+    sudo bootstrap-vz ./manifests/examples/kvm/jessie-virtio.yml
+}
+
+spindle() {
+    deb_install https://github.com/RPi-Distro/spindle
+}
+
+docker-bootstrap-vz() {
+sudo -i # become root
+git clone https://github.com/andsens/bootstrap-vz.git # Clone the repo
+apt-get install debootstrap python-pip docker.io # Install dependencies from aptitude
+pip install termcolor jsonschema fysom docopt pyyaml pyrfc3339 # Install python dependencies
+bootstrap-vz/bootstrap-vz bootstrap-vz/manifests/examples/docker/jessie-minimized.yml
+}
+
+vm_deb() {
+    packages=(vmdebootstrap mbr)
+
+    sudo aptitude install -y $packages
+    dir=/home/liam/qemu/x86_64/debian
+    [ -z $1 ] && name=generic || name=$1
+    time sudo vmdebootstrap --verbose \
+        --image=$dir/$name.qcow2 --size 10g \
+        --arch=amd64 --hostname=$name --user=liam/pass.enact \
+        --owner=liam --sudo --root-password=pass.enact \
+        --enable-dhcp --configure-apt \
+        --customize=/home/liam/bin/qemu-configure \
+        --log test.log --log-level debug --verbose --log-mode 766 \
+        --mirror http://ftp.es.debian.org/debian/
+    #   --custom-package=$(cat $dir/packages) \
+        #   --config=FILE
+    #   --foreign=PATH
+    #   --arch=ARCH
+
+    echo "      --image= "
+    echo "      --size= "
+    echo "      --mirror= "
+    echo "      --output=FILE "
+    echo "      --verbose "
+    echo "      --variant "
+    echo "      --image=FILE "
+    echo "      --size=SIZE "
+    echo "      --tarball=FILE "
+    echo "      --mirror=URL "
+    echo "      --arch=ARCH "
+    echo "      --distribution=NAME "
+    echo "      --package=PACKAGE "
+    echo "      --custom-package=DEB "
+    echo "      --no-kernel "
+    echo "      --enable-dhcp "
+    echo "      --root-password=PASSWORD "
+    echo "      --customize=SCRIPT "
+    echo "      --hostname=HOSTNAME "
+    echo "      --user=USER/PASSWORD "
+    echo "      --owner=OWNER "
+    echo "      --serial-console "
+    echo "      --serial-console-command "
+    echo "      --sudo "
+    echo "      --bootsize=BOOTSIZE "
+    echo "      --boottype=FSTYPE "
+    echo "      --foreign=PATH "
+    echo "      --squash "
+    echo "      --configure-apt "
+    echo "      --dump-config "
+    echo "      --config=FILE "
+}
+
+snapshot() {
+    qemu-kvm -snapshot /dev/sda -vga vmware -m 4096 -cpu host -k gb -net nic,vlan=1,model=virtio -net user,vlan=1
+}
+
+case $1 in
+    snap|snapshot) echo "Don't do it unless isolated and backed up" ;;
+    bootstrap) bootstrap "$2" ;;
+    lxc) $1 ;;
+    '') bootstrap stable ;;
+esac

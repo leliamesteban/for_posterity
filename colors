@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#get all png
+#find ./ -name "*.png" > png
+
+#convert to png
+convert () {
+[ -e "*.jpeg" ] && rename 's/jpeg/jpg/' *.jpeg
+#find ./ -type f \( -iname \*.jpg -o -iname \*.jpeg \) > jpeg
+find ./ -maxdepth 1 -name "*.jpg" > jpg
+mapfile -t jpg <jpg
+
+for i in "${jpg[@]}"
+do
+    png=$(basename $i .jpg)
+    convert $i png/$png.png
+    ls ~/Pictures/png
+done
+}
+
+colors () {
+mapfile -t files <png
+for i in ${files[@]}
+do
+    colors -pn 64 $i | . ~/source/colors/bin/hex2html > html/$i.html
+done
+}
+
+case $1 in
+    convert ) convert ;;
+    * ) convert ;;
+esac

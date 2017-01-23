@@ -1,0 +1,5 @@
+#!/bin/bash
+
+exec 2>&1
+[ $(ls -l $1 | awk '{print $3}') == "root" ] && out=/tmp/${1%.mg}.mid || out=${1%.mg}.mid
+midge $1 -o $out -U && timidity $out

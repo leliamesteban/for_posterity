@@ -1,0 +1,107 @@
+#!/bin/bash
+
+clean_up() {
+    sync
+    [[ -z $(mount | grep backup) ]] || ( sudo umount /mnt/backup && rm -rf /mnt/backup/*)
+    sync
+}
+
+pre() {
+    sudo apt-get install unburdenhomedir
+    echo get config
+}
+
+usage() {
+    echo "Home or Bootable"
+    echo "Home Brute force or minimal, or individual, or cli?"
+}
+
+trap clean_up EXIT
+
+[[ -z $(mount | grep backup) ]] && dir=/home/liam/sys/backup || dir=/mnt/backup/backup
+[ -d $dir ] || mkdir $dir
+packages=(pigz)
+
+low-level-rear() {
+git clone https://github.com/rear/rear.git
+cd rear/
+sudo usr/sbin/rear format /dev/sdb
+cat > etc/rear/local.conf <<EOF
+### write the rescue initramfs to USB and update the USB bootloader
+OUTPUT=USB
+
+### create a backup using the internal NETFS method, using 'tar'
+BACKUP=NETFS
+
+### write both rescue image and backup to the device labeled REAR-000
+BACKUP_URL=usb:///dev/disk/by-label/REAR-000
+EOF
+echo -e '\n'
+echo "Making Rescue Image"
+sudo usr/sbin/rear -v mkrescue
+
+echo -e '\n'
+echo "Making Backup"
+sudo usr/sbin/rear -v mkbackup
+sudo rm -rf rear
+}
+
+low-level() {
+echo "Low Level Backup using Dump + Restore"
+echo "Should probably be done from live USB"
+# sudo dd if=/dev/sda1 of=/home/liam/sys/backup/sda1.img
+
+# sudo aptitude install dump
+packages+=(dump)
+disk=/dev/sdb
+home=/home/liam
+root=/
+sudo fdisk -l $disk | grep type
+sudo fdisk -d /dev/sda > $dir/part_layout
+# or sgdisk for ?
+mkdir $dir/dump
+lsof /home
+fuser -mv /home
+echo make above empty and #sudo umount /home
+#dump -0aLf / | ssh user@backup-server dd of=/path/to/destination/data.dump
+sudo dump -0 -f - $root | pigz > $dir/dump/home.dump.gz
+echo "Restore with restore"
+}
+
+using_bup() {
+    echo Check https://debian-administration.org/users/kumanna/weblog/16
+    BUP_DIR=$dir/bup bup init
+    sleep 2s
+    BUP_DIR=$dir/bup bup index $HOME
+    sleep 2s
+    BUP_DIR=$dir/bup bup save -n bup-home $HOME
+    echo Probably best to do it individually
+    #   bup index qemu
+    #   bup save -n local-qemu qemu
+    #   bup fsck BUP_DIR
+}
+
+using_tar() {
+    #find /home/liam -type f | cpio -o | pigz -c > /home/liam/home.cpio.gz
+    size=$(du -cksh /home/liam | awk 'FNR == 2 {print $1}')
+    test -d $dir/tar || mkdir $dir/tar
+    out=$dir/tar/home.tar.gz
+    echo Backing up $size of home to $out
+    exclude="--exclude-from /home/liam/sys/backup/exclude"
+
+    tar cf - $HOME -P $1 --exclude="*.tar.gz" $exclude --one-file-system | pv -s $(du -sb $HOME | awk '{print $1}') | pigz > $out
+    notify-send Compressed size is $(du -h $out)
+    du -h --apparent-size $dir/tar/home.tar.gz
+
+    # https://help.ubuntu.com/community/BackupYourSystem/TAR
+}
+
+other_options() {
+    packages+=(git-annex rsnapshot dar borg)
+} 
+
+case $1 in
+    debug) $2 ;;
+    using_tar) $1 ;;
+    *) usage ;;
+esac

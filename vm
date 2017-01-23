@@ -1,0 +1,45 @@
+#!/bin/bash
+
+host=liam@192.168.1.38
+mntpnt=/mnt/osx
+remdir=/Users/liam/Desktop/qemu 
+opt="-C -o allow_other"
+
+#if mount point is empty
+if test `find $mntpnt -mindepth 1 -maxdepth 1 | wc -l` -eq 0 ; then 
+  sshfs $host:$remdir $mntpnt $opt 
+  echo mounted
+#else if test `find $mntpnt -mindepth 1 -maxdepth 1 | wc -l` -ne 0 
+else
+  echo "mntpoint $mntpnt is not empty: unmount? (y\n)" 
+  read unmount
+#unmount and remount for the purposes of having only one instance of sshfs at a time, so it will exit cleanly
+#  [[ $unmount == "y" || $unmount == "yes" ]] && fusermount -u $mntpnt ; sshfs $host:$remdir $mntpnt $opt || exit 1
+fi
+
+case $1 in
+  debian|deb)
+cdrom=${mntpnt}/debian/debian-8.5.0-amd64-netinst.iso ; 
+hda=${mntpnt}/debian/deb.qcow2 
+;;
+  '') echo no virtual machine specified 
+;;
+  *) 
+  echo "specify the hda and cdrom files manually? (y/n)"
+  echo "hda first"
+  hda=$1 
+  cdrom=$2 
+  exit
+;;
+esac
+
+if test `find $mntpnt -mindepth 1 -maxdepth 1 | wc -l` -eq 0 ; then 
+  echo something fucked up, this directory should be populated 
+  exit 1
+else 
+  :
+fi
+
+#cdrom superfluous after installation
+sudo qemu-system-x86_64 -hda $hda -cdrom $cdrom -m 2048 --enable-kvm -daemonize -cpu host -net user -net nic #redir tcp:5022::22 -redir tcp:9080::80
+#fusermount -u /mnt/osx

@@ -1,0 +1,77 @@
+#!/bin/bash
+
+BAT0=/sys/class/power_supply/BAT0/uevent 
+BAT1=/sys/class/power_supply/BAT1/uevent 
+paste /sys/class/power_supply/BAT0/uevent /sys/class/power_supply/BAT1/uevent | awk '{split($0,a,"="); split(a[2],b," "); (a[3] == "Charging" || b[1] == "Charging") ? $5 = "Charging" : $5 = (a[3] + b[1])/2; print a[1] "=" $5}' > ~/.uevent
+#cp $BAT1 ~/.uevent
+sed -i 's/POWER_SUPLLY_//' ~/.uevent
+
+charging() {
+    notify-send -t 1 "Charging"
+}
+
+discharging() {
+    power=$(awk -F"=" '/POWER_NOW/ {print $NF}' ~/.uevent )
+    energy=$(awk -F"=" '/ENERGY_NOW/ {print $NF}' ~/.uevent )
+#   seconds=$(py "$energy / $power*3600")
+    seconds=$(echo "x=$energy / $power*3600; if(x<1) print 0; x" | bc)
+    echo $seconds
+    echo $((seconds/86400))" days "$(date -d "1970-01-01 + $seconds seconds" "+%H hours %M minutes %S seconds")
+}
+
+
+discharging-f() {
+    power=$(awk -F"=" '/POWER_NOW/ {print $NF}' ~/.uevent )
+    energy=$(awk -F"=" '/ENERGY_NOW/ {print $NF}' ~/.uevent )
+
+    raw=$(py "$energy / $power")
+    time=$(py "int($energy / $power)")
+    hours=$(py "round($energy / $power)")
+    minutes=$(py "round($time * 60 % 60)")
+    seconds=$(py "round($time * 3600 % 60)")
+#   echo "$hours Hours"
+    echo "$time Hours"
+    echo $raw
+    echo "$hours:$minutes:$seconds"
+#   secs=$(py "$raw*3600 + $minutes*60 + $seconds")
+    secs=$(echo "x=$hours*3600 + $minutes*60 + $seconds; if(x<1) print 0; x" | bc)
+    printf '%02dh:%02dm:%02ds\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60))
+
+    ((h=${raw}/3600))
+    ((h=$(echo "x=${raw}/3600; if(X<1) print 0; x" | bc)))
+    ((m=(${raw}%3600)/60))
+    ((s=${raw}%60))
+    printf "%02d:%02d:%02d\n" $h $m $s
+
+
+    #printf '%dh:%dm:%ds\n' $(($seconds/3600)) $(($seconds%3600/60)) $(($seconds%60))
+    notify-send -t 1 "$hours Hours, $minutes minutes"
+    echo Should only be 15,30,45 or nothing minutes
+    acpi
+    # Simple one-liner
+    # 
+    # $ printf '%dh:%dm:%ds\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60))
+    # 65h:42m:1s
+    # 
+    # With leading zeroes
+    # 
+    # $ secs=236521
+    # 65h:42m:01s
+}
+
+[ ! -z $(grep "Charging" ~/.uevent) ] && charging || discharging
+
+notify() {
+    files=/sys/class/power_supply/BAT%i/
+    stat=$(cat /sys/class/power_supply/BAT0/status)
+
+    while true;
+    do
+        [[ $stat -lt 3[0-9]* ]] && notify-send "Battery Below $(cat $stat)" || sleep 60s 
+    done
+
+    (echo " $@" ; sleep 3s) | lemonbar -g 90x28+1500+10
+}
+
+# upower
+# https://www.kernel.org/doc/Documentation/power/power_supply_class.txt

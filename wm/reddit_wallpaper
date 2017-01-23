@@ -1,0 +1,59 @@
+#!/usr/bin/env php
+<?php
+
+##################################
+# CONFIGURATION - Edit this part #
+##################################
+$min_width    = 1920; //Minimum width for images
+$min_height   = 1080; //Minimum height for images
+$subreddits   = "earthporn+skyporn+waterporn"; //Subreddits to pull from. Seperate each with a plus sign.
+
+$command  = "feh --bg-fill --no-xinerama"; //Replace this with the command you use to set your desktop background.
+
+
+##############################################
+# THE REST OF THIS DOESN'T NEED TO BE EDITED #
+##############################################
+echo "Fetching listing from http://api.reddit.com/r/" . $subreddits . "/top\n";
+
+//Sets the useragent to something so that Reddit lets us go through
+$useragent = "Mozilla/5.0 (X11; Linux x86_64; rv:43.0) Gecko/20100101 Firefox/43.0";
+$reddit = json_decode(shell_exec("wget -qO- https://api.reddit.com/r/" . $subreddits . "/top/"), true);
+
+echo "\n\nSearching for image with height of at least $min_height and width of at least $min_width\n";
+
+$done =  false; $i = 0; //Two looping variables
+while(!$done){
+	$image = $reddit["data"]["children"][$i]["data"]["preview"]["images"][0]["source"]; //Selects first image to try
+
+	//Check to make sure that the image fits within the size constraints
+	if($image["width"] >= $min_width && $image["height"] >= $min_height && $image["width"] >= $image["height"]){
+		$done = true;
+	} else {
+		$i++;
+	}
+}
+
+//Print some data about the image
+echo "\n\nImage found!";
+echo "\nNumber $i\n";
+echo $reddit["data"]["children"][$i]["data"]["title"];
+echo "\nWidth: " . $image["width"] . " Height: " . $image["height"];
+echo "\nURL: " . $image["url"];
+echo "\n\n\n";
+
+//Saves the image as ~/.background
+shell_exec("wget -O ~/.background " . $image["url"]);
+
+//Convert background size. Necessary if using GNOME with multiple monitors.
+if($min_width > $min_height)
+	shell_exec("convert .background -resize " . $min_width . "x10000 .background");
+elseif($min_height > $min_width)
+	shell_exec("convert .background -resize 10000x" . $min_height . " .background");
+else
+	shell_exec("convert .background -resize " . $min_width . "x" . $min_height . " .background");
+
+//Sets the desktop background. If using GNOME, you may need to restart your shell.
+shell_exec("$command ~/.background");
+
+?>

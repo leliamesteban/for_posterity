@@ -1,0 +1,22 @@
+#!/bin/bash
+#command="convert "${1}" -colors 16 -depth 8 -format '%c' histogram:info:-"
+pic=~/Pictures/FzPuoEe.jpg
+command="convert $pic -colors 16 -depth 8 -format '%c' histogram:info:-"
+
+srgb () {
+$command | awk '{print $NF}' > srgb
+}
+
+hex () {
+#$command | awk '{print $3}' > hex
+convert $pic -colors 16 -depth 8 -format '%c' histogram:info:- \
+    | sort --reverse --numeric-sort \
+    | gawk 'match ($0, /^ *[0-9]+: \([^)]+\) (#[0-9A-F]+) .+$/, a) { print a[1] }' \
+    > hex
+}
+
+rgb () {
+$command | awk '{print $2}' > rgb
+}
+
+[[ ! -z $1 ]] && $1

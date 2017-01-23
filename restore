@@ -1,0 +1,19 @@
+#!/bin/bash
+
+no() {
+    echo not found, make it
+    exit
+}
+
+if [ -z $(ls | grep -w "$1") ] 
+then
+    dir=~/.sessions
+    sed '/^\s*$/d' $dir/*
+    if [ $(ls $dir | grep -w "$1" | wc -l) -ne 1 ] 
+    then
+        no
+    fi
+else
+    dir=$(pwd)
+fi
+awk -F '[()]' 'NF {print $(NF-1)}' $dir/$1 | xargs firefox

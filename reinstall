@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# https://www.debian.org/releases/stable/amd64/apds03.html.en
+
+packages() {
+sudo apt-get install dselect
+dpkg --set-selections <$packages
+sudo apt-get dselect-upgrade
+sudo aptitude install $(cat $packages | awk '{print $1}')
+}
+
+revert() {
+    echo https://www.howtoforge.com/rollback-to-a-working-state-with-btrfs-plus-apt-btrfs-snapshot-on-ubuntu-12.10
+}
+
+fai-solution() {
+    echo Overview http://fai-project.org/fai-guide/#_a_id_overview_a_overview_and_concepts
+    echo Plan http://fai-project.org/fai-guide/#plan
+    echo Not detailed https://debian-administration.org/article/240/FAI_the_Fully_Automatic_Installation_framework_for_linux
+}

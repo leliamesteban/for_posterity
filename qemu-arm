@@ -1,0 +1,50 @@
+#!/bin/bash
+
+wheezy() {
+qemu-system-arm -m 128 -M versatilepb -cpu arm1176 \
+-kernel ~/qemu/arm/qemu-rpi-kernel/tools/kernel-qemu \
+-hda ~/qemu/arm/debian_wheezy_armel_standard.qcow2 \
+-append "root=/dev/sda1" \
+-redir tcp:5022::22 \
+-net user -net nic -nographic \
+-daemonize
+#vmlinuz-3.2.0-4-versatile \
+#-initrd initrd.img-3.2.0-4-versatile \
+}
+
+volumio() {
+qemu-system-arm -m 128 -M versatilepb -initrd initrd.img-3.2.0-4-versatile -kernel vmlinuz-3.2.0-4-versatile \
+-hda ../iso/Volumio1.55PI.img -append "root=/dev/sda1"
+}
+
+void() {
+qemu-system-arm -m 128 -M versatilepb -initrd initrd.img-3.2.0-4-versatile -kernel vmlinuz-3.2.0-4-versatile -hda ~/qemu/void/void.qcow2 -append "root=/dev/sda1"
+}
+
+raspbian() {
+qemu-system-arm -m 128 -M versatilepb -cpu arm1176 \
+-kernel ~/qemu/arm/qemu-rpi-kernel/tools/kernel-qemu \
+-append "root=/dev/sda2 rootfstype=ext4 panic=0 rw init=/bin/bash" \
+-hda ~/qemu/iso/raspbian-jessie-lite.img \
+-daemonize \
+-net user -net nic -redir tcp:5022::22 \
+-no-reboot 
+
+#https://www.bentasker.co.uk/documentation/linux/267-testing-raspberry-pi-images-with-qemu
+#http://blog.3mdeb.com/2015/12/30/emulate-rapberry-pi-2-in-qemu/
+#https://github.com/dhruvvyas90/qemu-rpi-kernel/wiki
+#https://gist.github.com/JasonGhent/e7deab904b30cbc08a7d
+}
+
+vanilla() {
+qemu-system-arm -m 128 -M versatilepb -cpu arm1176 \
+-nographic -kernel "$2"
+}
+
+case $1 in
+  debian|wheezy) wheezy ;;
+  volumio) volumio ;;
+  void) void ;;
+  raspbian) raspbian ;;
+  *) vanilla ;;
+esac

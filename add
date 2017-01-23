@@ -1,0 +1,19 @@
+#!/bin/bash
+
+
+file=/home/liam/pi/raspbian/ua-netinst/install_files/installer-config.txt
+
+do_ed() {
+ed -p: $file << END
+?packages+=?
+a
+END
+echo ",$1"
+ed -p: $file << END
+.
+6,7j
+w
+q
+END
+grep $1 $file && exit || do_ed $1
+}

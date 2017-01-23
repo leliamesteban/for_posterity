@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# install $ qemu-android <path to eeepc.iso>
+qemu-kvm -soundhw es1370 -net nic -net user -cdrom \
+        ${@:-out/target/product/eeepc/eeepc.iso}
+
+# $ qemu-img create -f qcow2 android.img 1G
+
+# $ qemu-android eeepc.iso -hda android.img -boot d
+
+# http://www.android-x86.org/documents/qemuhowto
