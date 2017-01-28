@@ -1,0 +1,1 @@
+compile statically to bring all function calls and other things that need other files into the same compiled file

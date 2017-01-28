@@ -1,0 +1,10 @@
+float	placeholder: %5.1f - 5 characters plus one after decimal
+char
+int	placeholder: %d
+long	placeholder: %ld - at least 32 bits
+
+placeholders
+%o : octal
+%x : hex
+%s : string
+
